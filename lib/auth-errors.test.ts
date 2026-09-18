@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loginErrorMessage } from "./auth-errors";
+import { adminErrorMessage, loginErrorMessage } from "./auth-errors";
 
 describe("loginErrorMessage", () => {
   it("одинаково отвечает на неверную почту и неверный пароль", () => {
@@ -20,5 +20,21 @@ describe("loginErrorMessage", () => {
 
   it("не раскрывает детали прочих ошибок", () => {
     expect(loginErrorMessage({ status: 500, message: "connection refused" })).toBe("Не удалось войти. Попробуйте позже.");
+  });
+});
+
+describe("adminErrorMessage", () => {
+  it("переводит известные коды Better Auth", () => {
+    expect(adminErrorMessage({ code: "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL" })).toBe("Пользователь с такой почтой уже есть.");
+    expect(adminErrorMessage({ code: "YOU_CANNOT_BAN_YOURSELF" })).toBe("Нельзя заблокировать самого себя.");
+  });
+
+  it("сводит все отказы в правах к одному сообщению", () => {
+    expect(adminErrorMessage({ code: "YOU_ARE_NOT_ALLOWED_TO_DELETE_USERS" })).toBe("Недостаточно прав для этого действия.");
+  });
+
+  it("не показывает технические детали неизвестных ошибок", () => {
+    expect(adminErrorMessage({ code: "SOMETHING_ELSE" })).toBe("Не удалось выполнить действие. Попробуйте еще раз.");
+    expect(adminErrorMessage(undefined)).toBe("Не удалось выполнить действие. Попробуйте еще раз.");
   });
 });
