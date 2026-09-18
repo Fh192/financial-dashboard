@@ -1,20 +1,6 @@
-"use client";
-
-import { Loader2Icon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { PencilIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";
-import { useState, useTransition } from "react";
-import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { Button } from "@/components/ui/button";
 import { deleteInvoice } from "@/lib/actions/invoices";
 
@@ -40,51 +26,13 @@ export function EditInvoiceButton({ id }: { id: string }) {
 }
 
 export function DeleteInvoiceButton({ id, description }: { id: string; description: string }) {
-  const [open, setOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
-
-  function handleDelete() {
-    startTransition(async () => {
-      const result = await deleteInvoice(id);
-      if (result.ok) {
-        toast.success("Счет удален");
-        setOpen(false);
-      } else {
-        toast.error(result.message);
-      }
-    });
-  }
-
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger asChild>
-        <Button size="icon" variant="ghost" aria-label="Удалить счет">
-          <Trash2Icon />
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Удалить счет?</AlertDialogTitle>
-          <AlertDialogDescription>
-            {description}. Счет и история изменения его статуса будут удалены без возможности восстановления.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Отмена</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            disabled={isPending}
-            onClick={(e) => {
-              // Не закрываем диалог сразу: ждем ответа сервера
-              e.preventDefault();
-              handleDelete();
-            }}
-          >
-            {isPending && <Loader2Icon className="animate-spin" />}
-            Удалить
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ConfirmDeleteButton
+      action={deleteInvoice.bind(null, id)}
+      label="Удалить счет"
+      title="Удалить счет?"
+      description={`Счет (${description}) и история изменения его статуса будут удалены без возможности восстановления.`}
+      successMessage="Счет удален"
+    />
   );
 }

@@ -39,10 +39,21 @@ export function can(user: Pick<CurrentUser, "role">, permissions: Permissions): 
 
 /**
  * Для страниц, доступных не всем ролям: без прав — на главную панели.
- * Server Actions проверяют права через can() и возвращают ошибку формы.
+ * Server Actions проверяют права через authorizeAction() и возвращают ошибку.
  */
 export async function requirePermission(permissions: Permissions): Promise<CurrentUser> {
   const user = await requireUser();
   if (!can(user, permissions)) redirect("/dashboard");
   return user;
+}
+
+/**
+ * Для Server Actions: это публичные эндпоинты, поэтому права проверяются
+ * в самом действии, а не только скрытием кнопок. Без входа — на страницу
+ * входа, без прав — null (действие вернет сообщение об ошибке).
+ */
+export async function authorizeAction(permissions: Permissions): Promise<CurrentUser | null> {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  return can(user, permissions) ? user : null;
 }

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { CreateInvoiceButton } from "@/components/invoices/buttons";
-import { InvoicesTable, InvoicesTableSkeleton } from "@/components/invoices/invoices-table";
+import { InvoicesTable } from "@/components/invoices/invoices-table";
+import { ListSkeleton } from "@/components/list-skeleton";
 import { PageBreadcrumbs } from "@/components/page-breadcrumbs";
 import { PaginationNav } from "@/components/pagination-nav";
 import { SearchInput } from "@/components/search-input";
@@ -26,7 +27,7 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/dashboa
         {can(user, { invoice: ["create"] }) && <CreateInvoiceButton />}
       </div>
       {/* key: при новом поиске или странице снова показываем скелетон */}
-      <Suspense key={`${query}:${page}`} fallback={<InvoicesTableSkeleton />}>
+      <Suspense key={`${query}:${page}`} fallback={<ListSkeleton />}>
         <InvoicesTable query={query} page={page} user={user} />
       </Suspense>
       <PaginationNav totalPages={totalPages} />

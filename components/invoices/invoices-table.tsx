@@ -1,6 +1,5 @@
 import { InvoiceStatusBadge } from "@/components/invoices/status-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { can, type CurrentUser } from "@/lib/dal";
 import { fetchFilteredInvoices, type InvoiceRow } from "@/lib/data/invoices";
@@ -98,23 +97,6 @@ function Customer({ invoice }: { invoice: InvoiceRow }) {
         <p className="truncate text-sm font-medium">{invoice.customerName}</p>
         <p className="truncate text-xs text-muted-foreground">{invoice.customerEmail}</p>
       </div>
-    </div>
-  );
-}
-
-export function InvoicesTableSkeleton() {
-  return (
-    <div className="flex flex-col divide-y rounded-xl border">
-      {Array.from({ length: 6 }, (_, i) => (
-        <div key={i} className="flex items-center gap-3 p-4">
-          <Skeleton className="size-8 rounded-full" />
-          <div className="flex flex-1 flex-col gap-1.5">
-            <Skeleton className="h-4 w-44" />
-            <Skeleton className="h-3 w-32" />
-          </div>
-          <Skeleton className="hidden h-4 w-24 sm:block" />
-        </div>
-      ))}
     </div>
   );
 }

@@ -1,0 +1,81 @@
+import "server-only";
+import { z } from "zod";
+import { requirePermission } from "@/lib/dal";
+import { pool } from "@/lib/db";
+import { containsPattern } from "@/lib/search";
+
+export const CUSTOMERS_PER_PAGE = 8;
+
+export type CustomerRow = {
+  id: string;
+  name: string;
+  email: string;
+  imageUrl: string | null;
+  invoiceCount: number;
+  paid: number;
+  pending: number;
+};
+
+export type CustomerForm = {
+  id: string;
+  name: string;
+  email: string;
+  imageUrl: string | null;
+};
+
+// Поиск по имени и почте — оба поля покрыты триграммными GIN-индексами
+const SEARCH_CONDITION = "c.name ILIKE $1 OR c.email ILIKE $1";
+
+export async function fetchFilteredCustomers(query: string, page: number): Promise<CustomerRow[]> {
+  await requirePermission({ customer: ["read"] });
+
+  // Суммы по счетам считаем в подзапросе, чтобы LIMIT применялся к клиентам,
+  // а не к строкам соединения с invoices
+  const { rows } = await pool.query<Omit<CustomerRow, "paid" | "pending"> & { paid: string; pending: string }>(
+    `
+    SELECT
+      c.id,
+      c.name,
+      c.email,
+      c.image_url AS "imageUrl",
+      COALESCE(t.invoice_count, 0)::int AS "invoiceCount",
+      COALESCE(t.paid, 0)               AS paid,
+      COALESCE(t.pending, 0)            AS pending
+    FROM customers c
+    LEFT JOIN LATERAL (
+      SELECT
+        COUNT(*)                                       AS invoice_count,
+        SUM(i.amount) FILTER (WHERE i.status = 'paid')    AS paid,
+        SUM(i.amount) FILTER (WHERE i.status = 'pending') AS pending
+      FROM invoices i
+      WHERE i.customer_id = c.id
+    ) t ON true
+    WHERE ${SEARCH_CONDITION}
+    ORDER BY c.name
+    LIMIT $2 OFFSET $3
+    `,
+    [containsPattern(query), CUSTOMERS_PER_PAGE, (page - 1) * CUSTOMERS_PER_PAGE],
+  );
+  return rows.map((r) => ({ ...r, paid: Number(r.paid), pending: Number(r.pending) }));
+}
+
+export async function fetchCustomersPages(query: string): Promise<number> {
+  await requirePermission({ customer: ["read"] });
+
+  const { rows } = await pool.query<{ count: number }>(
+    `SELECT COUNT(*)::int AS count FROM customers c WHERE ${SEARCH_CONDITION}`,
+    [containsPattern(query)],
+  );
+  return Math.ceil(rows[0].count / CUSTOMERS_PER_PAGE);
+}
+
+export async function fetchCustomerById(id: string): Promise<CustomerForm | null> {
+  await requirePermission({ customer: ["read"] });
+  if (!z.uuid().safeParse(id).success) return null;
+
+  const { rows } = await pool.query<CustomerForm>(
+    `SELECT id, name, email, image_url AS "imageUrl" FROM customers WHERE id = $1`,
+    [id],
+  );
+  return rows[0] ?? null;
+}

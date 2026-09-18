@@ -1,6 +1,6 @@
 "use client";
 
-import { ChartColumnIcon, FileTextIcon, LayoutDashboardIcon, type LucideIcon } from "lucide-react";
+import { ChartColumnIcon, FileTextIcon, LayoutDashboardIcon, type LucideIcon, UsersIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -25,6 +25,7 @@ type NavItem = { title: string; href: string; icon: LucideIcon; permissions: Per
 const navItems: NavItem[] = [
   { title: "Обзор", href: "/dashboard", icon: LayoutDashboardIcon, permissions: { invoice: ["read"] } },
   { title: "Счета", href: "/dashboard/invoices", icon: FileTextIcon, permissions: { invoice: ["read"] } },
+  { title: "Клиенты", href: "/dashboard/customers", icon: UsersIcon, permissions: { customer: ["read"] } },
 ];
 
 function isActive(pathname: string, href: string) {
