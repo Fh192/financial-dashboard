@@ -11,6 +11,14 @@ const compactCurrency = new Intl.NumberFormat("ru-RU", {
 });
 const dateFormat = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 const monthShort = new Intl.DateTimeFormat("ru-RU", { month: "short", timeZone: "UTC" });
+const dateTimeFormat = new Intl.DateTimeFormat("ru-RU", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "Europe/Moscow",
+});
 const monthLong = new Intl.DateTimeFormat("ru-RU", { month: "long", year: "numeric", timeZone: "UTC" });
 
 function parseISODate(value: string): Date {
@@ -31,6 +39,11 @@ export function formatCurrencyCompact(cents: number): string {
 /** 2026-09-18 → «18 сент. 2026 г.» */
 export function formatDate(isoDate: string): string {
   return dateFormat.format(parseISODate(isoDate));
+}
+
+/** 2026-09-18T12:05:00Z → «18 сент. 2026 г., 15:05» (время московское) */
+export function formatDateTime(isoDateTime: string): string {
+  return dateTimeFormat.format(new Date(isoDateTime));
 }
 
 /** 2026-09-01 → «сент.» */

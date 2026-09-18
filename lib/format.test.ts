@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { formatCurrency, formatCurrencyCompact, formatDate, formatMonthLong, formatMonthShort, initials } from "./format";
+import { formatCurrency, formatCurrencyCompact, formatDate, formatDateTime, formatMonthLong, formatMonthShort, initials } from "./format";
 
 // Intl в ru-RU разделяет разряды и валюту неразрывными пробелами
-const normalize = (s: string) => s.replace(/[  ]/g, " ");
+const normalize = (s: string) => s.replace(/[\u00a0\u202f]/g, " ");
 
 describe("formatCurrency", () => {
   it("переводит центы в доллары с разделителями ru-RU", () => {
@@ -21,6 +21,11 @@ describe("даты", () => {
     expect(formatDate("2026-09-18")).toBe("18 сент. 2026 г.");
     expect(formatDate("2026-01-01")).toBe("1 янв. 2026 г.");
     expect(formatDate("2025-12-31")).toBe("31 дек. 2025 г.");
+  });
+
+  it("показывает время изменения по Москве", () => {
+    expect(formatDateTime("2026-09-18T12:05:00Z")).toBe("18 сент. 2026 г., 15:05");
+    expect(formatDateTime("2026-12-31T22:30:00Z")).toBe("1 янв. 2027 г., 01:30");
   });
 
   it("форматирует месяц для графика", () => {
