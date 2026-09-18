@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run --passWithNoTests",
@@ -72,7 +72,6 @@
     "tsx": "^4.23.13",
     "typescript": "^5",
     "vite": "^8.3.0",
-    "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^5.0.1"
   },
   "packageManager": "pnpm@12.4.2",

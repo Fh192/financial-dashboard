@@ -1,12 +1,14 @@
 # База данных
 
-PostgreSQL 17. Схема описана миграциями [dbmate](https://github.com/amacneil/dbmate) на чистом SQL в `db/migrations/`. Приложение работает с базой через драйвер `postgres` без ORM.
+PostgreSQL 17. Схема описана миграциями [dbmate](https://github.com/amacneil/dbmate) на чистом SQL в `db/migrations/`. Приложение работает с базой через драйвер `pg` без ORM. Авторизация — [Better Auth](https://www.better-auth.com/) (`lib/auth.ts`), его таблицы тоже создаются миграциями.
 
 ## Модель данных
 
 ```mermaid
 erDiagram
     users ||--o{ invoice_status_history : "changed_by"
+    users ||--o{ sessions : "user_id"
+    users ||--o{ accounts : "user_id"
     customers ||--o{ invoices : "customer_id"
     invoices ||--o{ invoice_status_history : "invoice_id"
 
@@ -14,10 +16,46 @@ erDiagram
         uuid id PK
         varchar name
         varchar email UK "уникален без учета регистра"
-        text password "bcrypt-хеш"
-        user_role role "admin | manager | viewer"
+        text role "admin | manager | viewer"
+        boolean email_verified
+        text image
+        boolean banned "блокировка"
+        text ban_reason
+        timestamptz ban_expires
         timestamptz created_at
         timestamptz updated_at
+    }
+    sessions {
+        uuid id PK
+        uuid user_id FK "ON DELETE CASCADE"
+        text token UK
+        timestamptz expires_at
+        text ip_address
+        text user_agent
+        text impersonated_by
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    accounts {
+        uuid id PK
+        uuid user_id FK "ON DELETE CASCADE"
+        text provider_id "credential — вход по паролю"
+        text account_id
+        text password "scrypt-хеш"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    verifications {
+        uuid id PK
+        text identifier
+        text value
+        timestamptz expires_at
+    }
+    rate_limits {
+        uuid id PK
+        text key UK "IP + адрес запроса"
+        integer count
+        bigint last_request "мс"
     }
     customers {
         uuid id PK
@@ -55,14 +93,18 @@ erDiagram
 
 | Объект | Назначение |
 |---|---|
-| `users` | Пользователи системы и их роли |
+| `users` | Пользователи системы, их роли и блокировка |
+| `sessions` | Сессии пользователей. Удаление строки завершает сессию |
+| `accounts` | Способы входа. Для входа по почте — `provider_id = 'credential'` и хеш пароля |
+| `verifications` | Одноразовые токены (сброс пароля, подтверждение почты) |
+| `rate_limits` | Счетчики ограничения частоты запросов к API авторизации |
 | `customers` | Клиенты, которым выставляются счета |
 | `invoices` | Счета клиентов |
 | `invoice_status_history` | Журнал смены статусов счетов. Заполняется только триггером `invoices_log_status_change` |
 | `exchange_rates` | Кэш официальных курсов ЦБ РФ |
 | `revenue` (представление) | Выручка по месяцам за последние 12 месяцев, считается из оплаченных счетов |
 
-Целостность обеспечивает сама база: внешние ключи, `CHECK` (сумма больше нуля, формат почты, непустое имя), перечисления для статуса и роли, уникальность почты без учета регистра. Поле `updated_at` обновляет триггер `set_updated_at`.
+Целостность обеспечивает сама база: внешние ключи, `CHECK` (сумма больше нуля, формат почты, непустое имя, допустимые роли), перечисление статусов счета, уникальность почты без учета регистра. Поле `updated_at` обновляет триггер `set_updated_at`.
 
 ## Локальный запуск
 
@@ -107,7 +149,8 @@ pnpm db:create-user         # пользователь приложения, с�
 | Право | Владелец (`DATABASE_URL`) | `dashboard_app` (приложение) | `dashboard_readonly` (отчеты) |
 |---|---|---|---|
 | Создание и изменение таблиц (DDL) | да | нет | нет |
-| `users` | все | чтение, добавление, изменение | чтение без столбца `password` |
+| `users` | все | все операции с данными | чтение без служебных полей блокировки |
+| `sessions`, `accounts`, `verifications`, `rate_limits` | все | все операции с данными | нет доступа |
 | `customers`, `invoices` | все | все операции с данными | чтение |
 | `exchange_rates` | все | чтение, добавление, изменение | чтение |
 | `invoice_status_history` | все | только чтение | чтение |
@@ -137,4 +180,4 @@ pnpm db:restore backups/<файл>.dump --yes        # восстановлен�
 
 - `DATABASE_URL` — прямой адрес владельца без пулера (`DATABASE_URL_UNPOOLED` в Vercel). Миграции и бэкапы запускайте по нему, а не через пулер.
 - `POSTGRES_URL` — строка из `pnpm db:create-user`. Для Vercel лучше адрес пулера: к первой части хоста добавить `-pooler`.
-- Параметр `channel_binding` из строк подключения Neon скрипты вырезают сами: драйвер `postgres` передал бы его серверу как неизвестную настройку.
+- Драйвер `pg` считает `sslmode=require` синонимом `verify-full` и пишет об этом предупреждение. Чтобы его не было, в адресах Neon замените `sslmode=require` на `sslmode=verify-full`.
