@@ -8,7 +8,7 @@ export async function LatestInvoices() {
   const invoices = await fetchLatestInvoices();
 
   return (
-    <Card className="h-full">
+    <Card className="h-full" data-testid="latest-invoices">
       <CardHeader>
         <CardTitle>Последние счета</CardTitle>
         <CardDescription>Пять последних по дате выставления</CardDescription>

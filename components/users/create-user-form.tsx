@@ -30,34 +30,36 @@ export function CreateUserForm() {
       <FieldGroup>
         <Field data-invalid={!!errors.name}>
           <FieldLabel htmlFor="name">Имя</FieldLabel>
-          <Input id="name" name="name" autoComplete="off" defaultValue={values.name} aria-invalid={!!errors.name} />
-          <FieldError errors={fieldError(errors.name)} />
+          <Input id="name" name="name" data-testid="field-name" autoComplete="off" defaultValue={values.name} aria-invalid={!!errors.name} />
+          <FieldError data-testid="field-error-name" errors={fieldError(errors.name)} />
         </Field>
 
         <Field data-invalid={!!errors.email}>
           <FieldLabel htmlFor="email">Почта (логин)</FieldLabel>
           <Input
             id="email"
+            data-testid="field-email"
             name="email"
             type="email"
             autoComplete="off"
             defaultValue={values.email}
             aria-invalid={!!errors.email}
           />
-          <FieldError errors={fieldError(errors.email)} />
+          <FieldError data-testid="field-error-email" errors={fieldError(errors.email)} />
         </Field>
 
         <Field data-invalid={!!errors.password}>
           <FieldLabel htmlFor="password">Пароль</FieldLabel>
           <Input
             id="password"
+            data-testid="field-password"
             name="password"
             type="password"
             autoComplete="new-password"
             aria-invalid={!!errors.password}
           />
           {errors.password ? (
-            <FieldError errors={fieldError(errors.password)} />
+            <FieldError data-testid="field-error-password" errors={fieldError(errors.password)} />
           ) : (
             <FieldDescription>От 8 до 128 символов. Передайте пароль пользователю лично.</FieldDescription>
           )}
@@ -66,7 +68,7 @@ export function CreateUserForm() {
         <Field data-invalid={!!errors.role}>
           <FieldLabel htmlFor="role">Роль</FieldLabel>
           <Select name="role" defaultValue={values.role}>
-            <SelectTrigger id="role" className="w-full" aria-invalid={!!errors.role}>
+            <SelectTrigger id="role" data-testid="field-role" className="w-full" aria-invalid={!!errors.role}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -77,7 +79,7 @@ export function CreateUserForm() {
               ))}
             </SelectContent>
           </Select>
-          <FieldError errors={fieldError(errors.role)} />
+          <FieldError data-testid="field-error-role" errors={fieldError(errors.role)} />
         </Field>
 
         {state.message && (
@@ -91,7 +93,7 @@ export function CreateUserForm() {
           <Button asChild variant="outline">
             <Link href="/dashboard/users">Отмена</Link>
           </Button>
-          <Button type="submit" disabled={isPending}>
+          <Button type="submit" data-testid="form-submit" disabled={isPending}>
             {isPending && <Loader2Icon className="animate-spin" />}
             Создать пользователя
           </Button>

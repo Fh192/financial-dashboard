@@ -7,31 +7,30 @@ test.describe("вход и выход", () => {
     await page.goto("/dashboard/invoices?query=кофейня");
 
     await expect(page).toHaveURL(/\/login\?from=/);
-    await expect(page.getByText("Вход в систему")).toBeVisible();
+    await expect(page.getByTestId("login-card")).toBeVisible();
   });
 
   test("неверный пароль — понятная ошибка, без подсказки, что именно неверно", async ({ page }) => {
     await page.goto("/login");
-    await page.getByLabel("Электронная почта").fill(USERS.manager.email);
-    await page.getByLabel("Пароль").fill("wrong-password");
-    await page.getByRole("button", { name: "Войти" }).click();
+    await page.getByTestId("field-email").fill(USERS.manager.email);
+    await page.getByTestId("field-password").fill("wrong-password");
+    await page.getByTestId("form-submit").click();
 
-    // role="alert" есть и у служебного объявления маршрутов Next, поэтому уточняем текстом
-    await expect(page.getByRole("alert").filter({ hasText: "Неверная почта или пароль." })).toBeVisible();
+    await expect(page.getByTestId("login-error")).toHaveText("Неверная почта или пароль.");
     await expect(page).toHaveURL(/\/login/);
   });
 
   test("после входа возвращает на запрошенную страницу, выход завершает сессию", async ({ page }) => {
     await page.goto("/dashboard/customers");
-    await page.getByLabel("Электронная почта").fill(USERS.manager.email);
-    await page.getByLabel("Пароль").fill(USERS.manager.password);
-    await page.getByRole("button", { name: "Войти" }).click();
+    await page.getByTestId("field-email").fill(USERS.manager.email);
+    await page.getByTestId("field-password").fill(USERS.manager.password);
+    await page.getByTestId("form-submit").click();
 
     await expect(page).toHaveURL(/\/dashboard\/customers$/);
-    await expect(page.getByRole("heading", { name: "Клиенты" })).toBeVisible();
+    await expect(page.getByTestId("page-title")).toHaveText("Клиенты");
 
-    await page.locator('[data-sidebar="footer"]').getByRole("button").click();
-    await page.getByRole("menuitem", { name: "Выйти" }).click();
+    await page.getByTestId("user-menu").click();
+    await page.getByTestId("logout").click();
     await expect(page).toHaveURL(/\/login$/);
 
     // Старая сессия больше не действует

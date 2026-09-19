@@ -8,7 +8,7 @@ export async function RevenueChart() {
   const total = data.reduce((sum, point) => sum + point.revenue, 0);
 
   return (
-    <Card className="h-full">
+    <Card className="h-full" data-testid="revenue-chart">
       <CardHeader>
         <CardTitle>Выручка</CardTitle>
         <CardDescription>Оплаченные счета за последние 12 месяцев: {formatCurrency(total)}</CardDescription>

@@ -16,7 +16,7 @@ export async function CustomersTable({ query, page, user }: Props) {
 
   if (customers.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed p-12 text-center text-sm text-muted-foreground">
+      <div data-testid="empty-state" className="rounded-xl border border-dashed p-12 text-center text-sm text-muted-foreground">
         {query ? `По запросу «${query}» ничего не найдено.` : "Клиентов пока нет."}
       </div>
     );
@@ -61,7 +61,7 @@ export async function CustomersTable({ query, page, user }: Props) {
       </ul>
 
       {/* Планшет и компьютер: таблица */}
-      <Table className="hidden md:table">
+      <Table data-testid="customers-table" className="hidden md:table">
         <TableHeader>
           <TableRow>
             <TableHead className="pl-4">Клиент</TableHead>
@@ -73,7 +73,7 @@ export async function CustomersTable({ query, page, user }: Props) {
         </TableHeader>
         <TableBody>
           {customers.map((customer) => (
-            <TableRow key={customer.id}>
+            <TableRow key={customer.id} data-testid={`customer-row-${customer.id}`}>
               <TableCell className="pl-4">
                 <CustomerInfo customer={customer} />
               </TableCell>

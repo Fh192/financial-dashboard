@@ -14,7 +14,7 @@ export async function UsersTable({ query, page, currentUser }: Props) {
 
   if (users.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed p-12 text-center text-sm text-muted-foreground">
+      <div data-testid="empty-state" className="rounded-xl border border-dashed p-12 text-center text-sm text-muted-foreground">
         {query ? `По запросу «${query}» ничего не найдено.` : "Пользователей пока нет."}
       </div>
     );
@@ -23,7 +23,7 @@ export async function UsersTable({ query, page, currentUser }: Props) {
   // Над своей учетной записью действия недоступны: чтобы не лишить себя доступа
   const actions = (user: UserRow) =>
     user.id === currentUser.id ? (
-      <span className="px-2 text-xs text-muted-foreground">Это вы</span>
+      <span data-testid="current-user" className="px-2 text-xs text-muted-foreground">Это вы</span>
     ) : (
       <UserActions user={user} />
     );
@@ -48,7 +48,7 @@ export async function UsersTable({ query, page, currentUser }: Props) {
       </ul>
 
       {/* Планшет и компьютер: таблица */}
-      <Table className="hidden md:table">
+      <Table data-testid="users-table" className="hidden md:table">
         <TableHeader>
           <TableRow>
             <TableHead className="pl-4">Пользователь</TableHead>
@@ -61,7 +61,7 @@ export async function UsersTable({ query, page, currentUser }: Props) {
         </TableHeader>
         <TableBody>
           {users.map((user) => (
-            <TableRow key={user.id}>
+            <TableRow key={user.id} data-testid={`user-row-${user.id}`}>
               <TableCell className="pl-4">
                 <UserInfo user={user} />
               </TableCell>

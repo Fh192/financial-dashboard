@@ -23,7 +23,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           </span>
           Financial Dashboard
         </div>
-        <Card>
+        <Card data-testid="login-card">
           <CardHeader className="text-center">
             <CardTitle className="text-xl">Вход в систему</CardTitle>
             <CardDescription>Учетные записи выдает администратор</CardDescription>

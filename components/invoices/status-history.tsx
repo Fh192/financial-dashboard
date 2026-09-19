@@ -9,7 +9,7 @@ export async function InvoiceStatusHistory({ invoiceId }: { invoiceId: string })
   const history = await fetchInvoiceHistory(invoiceId);
 
   return (
-    <Card className="max-w-xl">
+    <Card className="max-w-xl" data-testid="status-history">
       <CardHeader>
         <CardTitle>История статуса</CardTitle>
         <CardDescription>Время московское</CardDescription>
@@ -20,7 +20,12 @@ export async function InvoiceStatusHistory({ invoiceId }: { invoiceId: string })
         ) : (
           <ol className="flex flex-col gap-3">
             {history.map((change) => (
-              <li key={change.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+              <li
+                key={change.id}
+                data-testid={change.oldStatus ? "status-history-change" : "status-history-created"}
+                data-new-status={change.newStatus}
+                className="flex flex-wrap items-center justify-between gap-2 text-sm"
+              >
                 <span className="flex items-center gap-2">
                   {change.oldStatus ? (
                     <>

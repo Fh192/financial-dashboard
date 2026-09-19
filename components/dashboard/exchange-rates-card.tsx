@@ -17,7 +17,7 @@ export async function ExchangeRatesCard() {
   const [exchange, summary] = await Promise.all([getExchangeRates(), fetchDashboardSummary()]);
 
   return (
-    <Card>
+    <Card data-testid="exchange-rates" data-state={exchange ? "loaded" : "unavailable"}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <LandmarkIcon className="size-4 text-muted-foreground" />

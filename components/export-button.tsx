@@ -14,7 +14,7 @@ export function ExportButton({ href }: { href: string }) {
 
   return (
     <Button asChild variant="outline">
-      <a href={url} download>
+      <a href={url} download data-testid="export-csv">
         <DownloadIcon />
         <span className="hidden sm:inline">CSV</span>
       </a>

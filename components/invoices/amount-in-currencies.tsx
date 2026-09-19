@@ -9,7 +9,7 @@ export async function InvoiceAmountInCurrencies({ amount, date }: { amount: numb
   const converted = exchange && convertUsdCents(amount, exchange.rates);
 
   return (
-    <Card className="max-w-xl">
+    <Card className="max-w-xl" data-testid="amount-in-currencies">
       <CardHeader>
         <CardTitle>Сумма по курсу ЦБ РФ</CardTitle>
         <CardDescription>

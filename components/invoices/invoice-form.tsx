@@ -47,18 +47,18 @@ export function InvoiceForm({ customers, action, invoice, submitLabel }: Props) 
         <Field data-invalid={!!errors.customerId}>
           <FieldLabel htmlFor="customerId">Клиент</FieldLabel>
           <Select name="customerId" defaultValue={values.customerId}>
-            <SelectTrigger id="customerId" className="w-full" aria-invalid={!!errors.customerId}>
+            <SelectTrigger id="customerId" data-testid="field-customerId" className="w-full" aria-invalid={!!errors.customerId}>
               <SelectValue placeholder="Выберите клиента" />
             </SelectTrigger>
             <SelectContent>
               {customers.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
+                <SelectItem key={c.id} value={c.id} data-testid={`option-${c.id}`}>
                   {c.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <FieldError errors={fieldError(errors.customerId)} />
+          <FieldError data-testid="field-error-customerId" errors={fieldError(errors.customerId)} />
         </Field>
 
         <Field data-invalid={!!errors.amount}>
@@ -66,13 +66,14 @@ export function InvoiceForm({ customers, action, invoice, submitLabel }: Props) 
           <Input
             id="amount"
             name="amount"
+            data-testid="field-amount"
             inputMode="decimal"
             placeholder="0,00"
             defaultValue={values.amount}
             aria-invalid={!!errors.amount}
           />
           {errors.amount ? (
-            <FieldError errors={fieldError(errors.amount)} />
+            <FieldError data-testid="field-error-amount" errors={fieldError(errors.amount)} />
           ) : (
             <FieldDescription>До {MAX_AMOUNT.toLocaleString("ru-RU")} $, центы через запятую или точку</FieldDescription>
           )}
@@ -81,22 +82,22 @@ export function InvoiceForm({ customers, action, invoice, submitLabel }: Props) 
         <div className="grid gap-6 sm:grid-cols-2">
           <Field data-invalid={!!errors.date}>
             <FieldLabel htmlFor="date">Дата</FieldLabel>
-            <Input id="date" name="date" type="date" defaultValue={values.date} aria-invalid={!!errors.date} />
-            <FieldError errors={fieldError(errors.date)} />
+            <Input id="date" name="date" data-testid="field-date" type="date" defaultValue={values.date} aria-invalid={!!errors.date} />
+            <FieldError data-testid="field-error-date" errors={fieldError(errors.date)} />
           </Field>
 
           <Field data-invalid={!!errors.status}>
             <FieldLabel htmlFor="status">Статус</FieldLabel>
             <Select name="status" defaultValue={values.status}>
-              <SelectTrigger id="status" className="w-full" aria-invalid={!!errors.status}>
+              <SelectTrigger id="status" data-testid="field-status" className="w-full" aria-invalid={!!errors.status}>
                 <SelectValue placeholder="Выберите статус" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="pending">Ожидает оплаты</SelectItem>
-                <SelectItem value="paid">Оплачен</SelectItem>
+                <SelectItem value="pending" data-testid="option-pending">Ожидает оплаты</SelectItem>
+                <SelectItem value="paid" data-testid="option-paid">Оплачен</SelectItem>
               </SelectContent>
             </Select>
-            <FieldError errors={fieldError(errors.status)} />
+            <FieldError data-testid="field-error-status" errors={fieldError(errors.status)} />
           </Field>
         </div>
 
@@ -111,7 +112,7 @@ export function InvoiceForm({ customers, action, invoice, submitLabel }: Props) 
           <Button asChild variant="outline">
             <Link href="/dashboard/invoices">Отмена</Link>
           </Button>
-          <Button type="submit" disabled={isPending}>
+          <Button type="submit" data-testid="form-submit" disabled={isPending}>
             {isPending && <Loader2Icon className="animate-spin" />}
             {submitLabel}
           </Button>

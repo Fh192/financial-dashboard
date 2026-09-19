@@ -26,7 +26,7 @@ export function PageBreadcrumbs({ items }: { items: Crumb[] }) {
                 </BreadcrumbLink>
               ) : (
                 <BreadcrumbPage>
-                  <h1 className="font-semibold">{item.label}</h1>
+                  <h1 data-testid="page-title" className="font-semibold">{item.label}</h1>
                 </BreadcrumbPage>
               )}
             </BreadcrumbItem>

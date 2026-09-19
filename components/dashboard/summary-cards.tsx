@@ -8,17 +8,19 @@ export async function SummaryCards() {
 
   return (
     <>
-      <SummaryCard title="Оплачено" value={formatCurrency(paid)} icon={BanknoteIcon} />
-      <SummaryCard title="Ожидает оплаты" value={formatCurrency(pending)} icon={ClockIcon} />
-      <SummaryCard title="Всего счетов" value={invoiceCount.toLocaleString("ru-RU")} icon={FileTextIcon} />
-      <SummaryCard title="Всего клиентов" value={customerCount.toLocaleString("ru-RU")} icon={UsersIcon} />
+      <SummaryCard testId="summary-paid" title="Оплачено" value={formatCurrency(paid)} icon={BanknoteIcon} />
+      <SummaryCard testId="summary-pending" title="Ожидает оплаты" value={formatCurrency(pending)} icon={ClockIcon} />
+      <SummaryCard testId="summary-invoices" title="Всего счетов" value={invoiceCount.toLocaleString("ru-RU")} icon={FileTextIcon} />
+      <SummaryCard testId="summary-customers" title="Всего клиентов" value={customerCount.toLocaleString("ru-RU")} icon={UsersIcon} />
     </>
   );
 }
 
-function SummaryCard({ title, value, icon: Icon }: { title: string; value: string; icon: LucideIcon }) {
+type SummaryCardProps = { testId: string; title: string; value: string; icon: LucideIcon };
+
+function SummaryCard({ testId, title, value, icon: Icon }: SummaryCardProps) {
   return (
-    <Card>
+    <Card data-testid={testId}>
       <CardHeader className="flex flex-row items-center justify-between gap-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
         <Icon className="size-4 text-muted-foreground" />

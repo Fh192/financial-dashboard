@@ -3,17 +3,17 @@ import { SEED_CUSTOMER, search, storageState, uniqueAmount } from "./helpers";
 
 test.use({ storageState: storageState("manager") });
 
-async function selectOption(page: Page, label: string, option: string) {
-  await page.getByRole("combobox", { name: label }).click();
-  await page.getByRole("option", { name: option }).click();
+async function selectOption(page: Page, field: string, value: string) {
+  await page.getByTestId(`field-${field}`).click();
+  await page.getByTestId(`option-${value}`).click();
 }
 
 test("пустая форма счета показывает ошибки у полей", async ({ page }) => {
   await page.goto("/dashboard/invoices/create");
-  await page.getByRole("button", { name: "Создать счет" }).click();
+  await page.getByTestId("form-submit").click();
 
-  await expect(page.getByText("Выберите клиента")).toBeVisible();
-  await expect(page.getByText("Введите сумму")).toBeVisible();
+  await expect(page.getByTestId("field-error-customerId")).toHaveText("Выберите клиента");
+  await expect(page.getByTestId("field-error-amount")).toHaveText("Введите сумму");
   await expect(page).toHaveURL(/\/create$/);
 });
 
@@ -22,41 +22,42 @@ test("полный цикл счета: создание, поиск, истор
 
   // Создание: сумма через запятую, как ее вводит пользователь
   await page.goto("/dashboard/invoices/create");
-  await selectOption(page, "Клиент", SEED_CUSTOMER.name);
-  await page.getByLabel("Сумма, $").fill(amount.dollars.replace(".", ","));
-  await selectOption(page, "Статус", "Оплачен");
-  await page.getByRole("button", { name: "Создать счет" }).click();
+  await selectOption(page, "customerId", SEED_CUSTOMER.id);
+  await page.getByTestId("field-amount").fill(amount.dollars.replace(".", ","));
+  await selectOption(page, "status", "paid");
+  await page.getByTestId("form-submit").click();
   await expect(page).toHaveURL(/\/dashboard\/invoices$/);
 
   // Поиск по сумме находит ровно этот счет
   await search(page, amount.dollars);
-  const row = page.getByRole("row").filter({ hasText: SEED_CUSTOMER.name });
+  const row = page.getByTestId(/^invoice-row-/);
   await expect(row).toHaveCount(1);
-  await expect(row.getByText("Оплачен")).toBeVisible();
+  await expect(row).toContainText(SEED_CUSTOMER.name);
+  await expect(row.getByTestId("invoice-status")).toHaveAttribute("data-status", "paid");
 
   // Журнал статусов заполнил триггер БД от имени менеджера
-  await row.getByRole("link", { name: "Изменить счет" }).click();
-  const history = page.locator('[data-slot="card"]').filter({ hasText: "История статуса" });
-  await expect(history.getByText("Создан:")).toBeVisible();
-  await expect(history.getByText(/Менеджер/)).toBeVisible();
-  await expect(page.locator('[data-slot="card"]').filter({ hasText: "Сумма по курсу ЦБ РФ" })).toBeVisible();
+  await row.getByTestId("invoice-edit").click();
+  const created = page.getByTestId("status-history-created");
+  await expect(created).toHaveAttribute("data-new-status", "paid");
+  await expect(created).toContainText("Менеджер");
+  await expect(page.getByTestId("amount-in-currencies")).toBeVisible();
 
   // Смена статуса
-  await selectOption(page, "Статус", "Ожидает оплаты");
-  await page.getByRole("button", { name: "Сохранить" }).click();
+  await selectOption(page, "status", "pending");
+  await page.getByTestId("form-submit").click();
   await expect(page).toHaveURL(/\/dashboard\/invoices$/);
   await search(page, amount.dollars);
-  await expect(row.getByText("Ожидает")).toBeVisible();
+  await expect(row.getByTestId("invoice-status")).toHaveAttribute("data-status", "pending");
 
   // Удаление через диалог подтверждения
-  await row.getByRole("button", { name: "Удалить счет" }).click();
-  await page.getByRole("alertdialog").getByRole("button", { name: "Удалить" }).click();
-  await expect(page.getByText("Счет удален")).toBeVisible();
-  await expect(page.getByText(/ничего не найдено/)).toBeVisible();
+  await row.getByTestId("invoice-delete").click();
+  await page.getByTestId("confirm-dialog").getByTestId("confirm-delete").click();
+  await expect(page.getByTestId("toast-success")).toHaveText("Счет удален");
+  await expect(page.getByTestId("empty-state")).toBeVisible();
 });
 
 test("несуществующий счет — страница «не найдено»", async ({ page }) => {
   const response = await page.goto("/dashboard/invoices/00000000-0000-4000-8000-000000000000/edit");
   expect(response?.status()).toBe(404);
-  await expect(page.getByText("Счет не найден")).toBeVisible();
+  await expect(page.getByTestId("invoice-not-found")).toBeVisible();
 });

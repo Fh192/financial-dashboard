@@ -64,10 +64,10 @@ export function UserActions({ user }: Props) {
     startTransition(async () => {
       const result = await action();
       if (result.ok) {
-        toast.success(success);
+        toast.success(success, { testId: "toast-success" });
         setDialog(null);
       } else {
-        toast.error(result.message);
+        toast.error(result.message, { testId: "toast-error" });
       }
     });
   }
@@ -77,7 +77,7 @@ export function UserActions({ user }: Props) {
       {/* modal={false}: иначе Radix не дает открыть диалог из пункта меню */}
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
-          <Button size="icon" variant="ghost" aria-label={`Действия: ${user.name}`} disabled={isPending}>
+          <Button size="icon" variant="ghost" aria-label={`Действия: ${user.name}`} data-testid="user-actions" disabled={isPending}>
             {isPending ? <Loader2Icon className="animate-spin" /> : <MoreHorizontalIcon />}
           </Button>
         </DropdownMenuTrigger>

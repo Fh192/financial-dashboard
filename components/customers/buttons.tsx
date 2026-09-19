@@ -7,7 +7,7 @@ import { deleteCustomer } from "@/lib/actions/customers";
 export function CreateCustomerButton() {
   return (
     <Button asChild>
-      <Link href="/dashboard/customers/create">
+      <Link href="/dashboard/customers/create" data-testid="customer-create">
         <PlusIcon />
         <span className="hidden sm:inline">Новый клиент</span>
       </Link>
@@ -18,7 +18,7 @@ export function CreateCustomerButton() {
 export function EditCustomerButton({ id }: { id: string }) {
   return (
     <Button asChild size="icon" variant="ghost">
-      <Link href={`/dashboard/customers/${id}/edit`} aria-label="Изменить клиента">
+      <Link href={`/dashboard/customers/${id}/edit`} data-testid="customer-edit" aria-label="Изменить клиента">
         <PencilIcon />
       </Link>
     </Button>
@@ -28,6 +28,7 @@ export function EditCustomerButton({ id }: { id: string }) {
 export function DeleteCustomerButton({ id, name }: { id: string; name: string }) {
   return (
     <ConfirmDeleteButton
+      testId="customer-delete"
       action={deleteCustomer.bind(null, id)}
       label="Удалить клиента"
       title="Удалить клиента?"

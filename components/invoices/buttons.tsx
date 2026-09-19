@@ -7,7 +7,7 @@ import { deleteInvoice } from "@/lib/actions/invoices";
 export function CreateInvoiceButton() {
   return (
     <Button asChild>
-      <Link href="/dashboard/invoices/create">
+      <Link href="/dashboard/invoices/create" data-testid="invoice-create">
         <PlusIcon />
         <span className="hidden sm:inline">Новый счет</span>
       </Link>
@@ -18,7 +18,7 @@ export function CreateInvoiceButton() {
 export function EditInvoiceButton({ id }: { id: string }) {
   return (
     <Button asChild size="icon" variant="ghost">
-      <Link href={`/dashboard/invoices/${id}/edit`} aria-label="Изменить счет">
+      <Link href={`/dashboard/invoices/${id}/edit`} data-testid="invoice-edit" aria-label="Изменить счет">
         <PencilIcon />
       </Link>
     </Button>
@@ -28,6 +28,7 @@ export function EditInvoiceButton({ id }: { id: string }) {
 export function DeleteInvoiceButton({ id, description }: { id: string; description: string }) {
   return (
     <ConfirmDeleteButton
+      testId="invoice-delete"
       action={deleteInvoice.bind(null, id)}
       label="Удалить счет"
       title="Удалить счет?"

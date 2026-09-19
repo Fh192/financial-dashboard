@@ -20,6 +20,8 @@ import type { ActionResult } from "@/lib/actions/types";
 type Props = {
   /** Server Action с уже привязанным id: deleteInvoice.bind(null, id) */
   action: () => Promise<ActionResult>;
+  /** data-testid кнопки, открывающей диалог */
+  testId: string;
   label: string;
   title: string;
   description: string;
@@ -27,7 +29,7 @@ type Props = {
 };
 
 /** Кнопка удаления с подтверждением. Диалог закрывается только после ответа сервера. */
-export function ConfirmDeleteButton({ action, label, title, description, successMessage }: Props) {
+export function ConfirmDeleteButton({ action, testId, label, title, description, successMessage }: Props) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -35,10 +37,10 @@ export function ConfirmDeleteButton({ action, label, title, description, success
     startTransition(async () => {
       const result = await action();
       if (result.ok) {
-        toast.success(successMessage);
+        toast.success(successMessage, { testId: "toast-success" });
         setOpen(false);
       } else {
-        toast.error(result.message);
+        toast.error(result.message, { testId: "toast-error" });
       }
     });
   }
@@ -46,19 +48,20 @@ export function ConfirmDeleteButton({ action, label, title, description, success
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <Button size="icon" variant="ghost" aria-label={label}>
+        <Button size="icon" variant="ghost" aria-label={label} data-testid={testId}>
           <Trash2Icon />
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent data-testid="confirm-dialog">
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Отмена</AlertDialogCancel>
+          <AlertDialogCancel data-testid="confirm-cancel" disabled={isPending}>Отмена</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
+            data-testid="confirm-delete"
             disabled={isPending}
             onClick={(e) => {
               e.preventDefault();

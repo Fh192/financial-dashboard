@@ -36,7 +36,7 @@ export function NavUser({ user }: { user: CurrentUser }) {
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent">
+            <SidebarMenuButton size="lg" data-testid="user-menu" className="data-[state=open]:bg-sidebar-accent">
               <UserAvatar user={user} />
               <span className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
@@ -62,7 +62,7 @@ export function NavUser({ user }: { user: CurrentUser }) {
               <Badge variant="secondary">{roleLabels[user.role]}</Badge>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem disabled={isPending} onSelect={() => startTransition(() => logout())}>
+            <DropdownMenuItem data-testid="logout" disabled={isPending} onSelect={() => startTransition(() => logout())}>
               <LogOutIcon />
               Выйти
             </DropdownMenuItem>

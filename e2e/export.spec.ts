@@ -8,7 +8,7 @@ test("выгрузка счетов в CSV учитывает поиск и от
   await page.goto(`/dashboard/invoices?query=${encodeURIComponent("кофейня")}`);
 
   const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("link", { name: "CSV" }).click();
+  await page.getByTestId("export-csv").click();
   const download = await downloadPromise;
 
   expect(download.suggestedFilename()).toMatch(/^invoices-\d{4}-\d{2}-\d{2}\.csv$/);

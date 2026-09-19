@@ -38,6 +38,7 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
           <FieldLabel htmlFor="email">Электронная почта</FieldLabel>
           <Input
             id="email"
+            data-testid="field-email"
             name="email"
             type="email"
             autoComplete="email"
@@ -48,17 +49,17 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
         </Field>
         <Field>
           <FieldLabel htmlFor="password">Пароль</FieldLabel>
-          <Input id="password" name="password" type="password" autoComplete="current-password" required />
+          <Input id="password" name="password" data-testid="field-password" type="password" autoComplete="current-password" required />
         </Field>
 
         {state.error && (
-          <p role="alert" className="flex items-center gap-2 text-sm text-destructive">
+          <p role="alert" data-testid="login-error" className="flex items-center gap-2 text-sm text-destructive">
             <AlertCircleIcon className="size-4 shrink-0" />
             {state.error}
           </p>
         )}
 
-        <Button type="submit" className="w-full" disabled={isPending}>
+        <Button type="submit" data-testid="form-submit" className="w-full" disabled={isPending}>
           {isPending && <Loader2Icon className="size-4 animate-spin" />}
           Войти
         </Button>

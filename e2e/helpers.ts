@@ -2,9 +2,9 @@ import { type APIRequestContext, expect, type Page } from "@playwright/test";
 
 // Тестовые учетные записи из db/seed.ts
 export const USERS = {
-  admin: { email: "admin@example.com", password: "Admin123!", name: "Администратор" },
-  manager: { email: "manager@example.com", password: "Manager123!", name: "Менеджер" },
-  viewer: { email: "viewer@example.com", password: "Viewer123!", name: "Наблюдатель" },
+  admin: { id: "10000000-0000-4000-8000-000000000001", email: "admin@example.com", password: "Admin123!", name: "Администратор" },
+  manager: { id: "10000000-0000-4000-8000-000000000002", email: "manager@example.com", password: "Manager123!", name: "Менеджер" },
+  viewer: { id: "10000000-0000-4000-8000-000000000003", email: "viewer@example.com", password: "Viewer123!", name: "Наблюдатель" },
 } as const;
 
 export type Role = keyof typeof USERS;
@@ -41,6 +41,6 @@ export async function apiToken(request: APIRequestContext, role: Role): Promise<
  * перебьет клик по строке, сделанный раньше.
  */
 export async function search(page: Page, text: string) {
-  await page.getByLabel("Поиск").fill(text);
+  await page.getByTestId("search-input").fill(text);
   await expect(page).toHaveURL((url) => url.searchParams.get("query") === text);
 }
