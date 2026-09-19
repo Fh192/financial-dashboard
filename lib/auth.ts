@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
-import { admin as adminPlugin } from "better-auth/plugins";
+import { admin as adminPlugin, bearer } from "better-auth/plugins";
 import { pool } from "@/lib/db";
 import { ac, DEFAULT_ROLE, roles } from "@/lib/permissions";
 
@@ -82,6 +82,9 @@ export const auth = betterAuth({
         session: { fields: { impersonatedBy: "impersonated_by" } },
       },
     }),
+    // REST API для внешних клиентов (Postman, curl): токен сессии из заголовка
+    // set-auth-token ответа на вход передается как Authorization: Bearer <токен>
+    bearer(),
     // Должен быть последним: выставляет cookie из Server Actions
     nextCookies(),
   ],

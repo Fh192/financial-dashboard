@@ -10,6 +10,7 @@ export const INVOICES_PER_PAGE = 8;
 
 export type InvoiceRow = {
   id: string;
+  customerId: string;
   amount: number;
   status: InvoiceStatus;
   date: string;
@@ -57,11 +58,34 @@ export async function fetchInvoicesForExport(query: string): Promise<InvoiceRow[
   return selectInvoices(query, MAX_EXPORT_ROWS, 0);
 }
 
-async function selectInvoices(query: string, limit: number, offset: number): Promise<InvoiceRow[]> {
+/** Страница счетов и общее число найденных — для REST API. */
+export async function fetchInvoicesPage(
+  query: string,
+  page: number,
+  pageSize: number,
+): Promise<{ items: InvoiceRow[]; total: number }> {
+  await requirePermission({ invoice: ["read"] });
+  const [items, total] = await Promise.all([
+    selectInvoices(query, pageSize, (page - 1) * pageSize),
+    countInvoices(query),
+  ]);
+  return { items, total };
+}
+
+/** Счет с данными клиента — для REST API. null, если не найден. */
+export async function fetchInvoiceRowById(id: string): Promise<InvoiceRow | null> {
+  await requirePermission({ invoice: ["read"] });
+  if (!z.uuid().safeParse(id).success) return null;
+  const [row] = await selectInvoices("", 1, 0, id);
+  return row ?? null;
+}
+
+async function selectInvoices(query: string, limit: number, offset: number, id?: string): Promise<InvoiceRow[]> {
   const { rows } = await pool.query<InvoiceRow>(
     `
     SELECT
       i.id,
+      i.customer_id AS "customerId",
       i.amount,
       i.status,
       to_char(i.date, 'YYYY-MM-DD') AS date,
@@ -70,18 +94,21 @@ async function selectInvoices(query: string, limit: number, offset: number): Pro
       c.image_url AS "customerImageUrl"
     FROM invoices i
     JOIN customers c ON c.id = i.customer_id
-    WHERE ${SEARCH_CONDITION}
+    WHERE (${SEARCH_CONDITION}) AND ($4::uuid IS NULL OR i.id = $4)
     ORDER BY i.date DESC, i.created_at DESC
     LIMIT $2 OFFSET $3
     `,
-    [containsPattern(query), limit, offset],
+    [containsPattern(query), limit, offset, id ?? null],
   );
   return rows;
 }
 
 export async function fetchInvoicesPages(query: string): Promise<number> {
   await requirePermission({ invoice: ["read"] });
+  return Math.ceil((await countInvoices(query)) / INVOICES_PER_PAGE);
+}
 
+async function countInvoices(query: string): Promise<number> {
   const { rows } = await pool.query<{ count: number }>(
     `
     SELECT COUNT(*)::int AS count
@@ -91,7 +118,7 @@ export async function fetchInvoicesPages(query: string): Promise<number> {
     `,
     [containsPattern(query)],
   );
-  return Math.ceil(rows[0].count / INVOICES_PER_PAGE);
+  return rows[0].count;
 }
 
 export async function fetchInvoiceById(id: string): Promise<InvoiceForm | null> {

@@ -57,9 +57,10 @@ describe("parseCbrMirrorJson", () => {
 describe("пересчет", () => {
   const rates = toRubPerUnit(parseCbrXml(XML).rates);
 
-  it("учитывает номинал курса", () => {
-    expect(rates.USD).toBeCloseTo(84.5093, 6);
-    expect(rates.DZD).toBeCloseTo(0.632339, 6);
+  it("учитывает номинал курса и не оставляет шума плавающей точки", () => {
+    expect(rates.USD).toBe(84.5093);
+    expect(rates.DZD).toBe(0.632339);
+    expect(toRubPerUnit([{ code: "AMD", nominal: 100, value: "21.2161" }]).AMD).toBe(0.212161);
   });
 
   it("переводит центы USD в рубли, евро и юани", () => {

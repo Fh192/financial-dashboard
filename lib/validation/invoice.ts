@@ -8,6 +8,18 @@ export const MAX_AMOUNT = 1_000_000; // долларов; в центах это
 
 const isoDate = /^\d{4}-\d{2}-\d{2}$/;
 
+/** Дата YYYY-MM-DD, которая действительно существует (не «2026-02-30»). */
+export const dateSchema = z
+  .string({ error: "Укажите дату" })
+  .regex(isoDate, { error: "Укажите дату" })
+  // Date.parse принимает «2026-02-30» и сдвигает на март, поэтому сверяем обратно
+  .refine((v) => {
+    const d = new Date(`${v}T00:00:00Z`);
+    return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+  }, { error: "Некорректная дата" });
+
+export const invoiceStatusSchema = z.enum(["pending", "paid"], { error: "Выберите статус" });
+
 export const invoiceSchema = z.object({
   customerId: z.uuid({ error: "Выберите клиента" }),
   amount: z.coerce
@@ -18,15 +30,8 @@ export const invoiceSchema = z.object({
       error: "Не больше двух знаков после запятой",
     })
     .transform((v) => Math.round(v * 100)), // в центах
-  status: z.enum(["pending", "paid"], { error: "Выберите статус" }),
-  date: z
-    .string({ error: "Укажите дату" })
-    .regex(isoDate, { error: "Укажите дату" })
-    // Date.parse принимает «2026-02-30» и сдвигает на март, поэтому сверяем обратно
-    .refine((v) => {
-      const d = new Date(`${v}T00:00:00Z`);
-      return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
-    }, { error: "Некорректная дата" }),
+  status: invoiceStatusSchema,
+  date: dateSchema,
 });
 
 export type InvoiceInput = z.infer<typeof invoiceSchema>;

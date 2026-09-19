@@ -4,7 +4,9 @@ import type { CbrRate } from "./parse";
 export type RubPerUnit = Record<string, number>;
 
 export function toRubPerUnit(rates: Pick<CbrRate, "code" | "nominal" | "value">[]): RubPerUnit {
-  return Object.fromEntries(rates.map((r) => [r.code, Number(r.value) / r.nominal]));
+  // Округляем до 6 знаков: ЦБ дает 4 знака на номинал до 10 000 единиц, а деление
+  // во float иначе оставляет «шум» вроде 0.21216100000000002
+  return Object.fromEntries(rates.map((r) => [r.code, Math.round((Number(r.value) / r.nominal) * 1e6) / 1e6]));
 }
 
 export type Conversion = { rub: number; eur: number | null; cny: number | null };

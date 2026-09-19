@@ -5,52 +5,46 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { type ActionResult, DB_ERROR, FORBIDDEN, type FormState, formValues } from "@/lib/actions/types";
 import { authorizeAction } from "@/lib/dal";
-import { pool } from "@/lib/db";
-import { isForeignKeyViolation, isUniqueViolation } from "@/lib/db-errors";
-import { type CustomerField, type CustomerInput, parseCustomerForm } from "@/lib/validation/customer";
+import { type CustomerData, deleteCustomerById, insertCustomer, updateCustomerById } from "@/lib/services/customers";
+import { ServiceError } from "@/lib/services/errors";
+import { type CustomerField, parseCustomerForm } from "@/lib/validation/customer";
 
 export type CustomerFormState = FormState<CustomerField>;
 
 const FIELDS: CustomerField[] = ["name", "email", "imageUrl"];
-const EMAIL_TAKEN = "Клиент с такой почтой уже есть.";
 
-type SaveResult = { ok: true; found: boolean } | { ok: false; state: CustomerFormState };
-
-// Общая часть создания и изменения: проверка прав, формы и ошибок БД
+// Общая часть создания и изменения: права, проверка формы, ошибки сервиса
 async function saveCustomer(
   permission: "create" | "update",
   formData: FormData,
-  save: (data: CustomerInput) => Promise<{ rowCount: number | null }>,
-): Promise<SaveResult> {
+  save: (data: CustomerData) => Promise<unknown>,
+): Promise<CustomerFormState | null> {
   const values = formValues(formData, FIELDS);
-  const fail = (state: Omit<CustomerFormState, "values">): SaveResult => ({ ok: false, state: { ...state, values } });
-
-  if (!(await authorizeAction({ customer: [permission] }))) return fail({ message: FORBIDDEN, errors: {} });
+  if (!(await authorizeAction({ customer: [permission] }))) return { message: FORBIDDEN, errors: {}, values };
 
   const parsed = parseCustomerForm(formData);
   if (!parsed.success) {
-    return fail({ message: "Проверьте поля формы.", errors: z.flattenError(parsed.error).fieldErrors });
+    return { message: "Проверьте поля формы.", errors: z.flattenError(parsed.error).fieldErrors, values };
   }
 
   try {
-    const { rowCount } = await save(parsed.data);
-    return { ok: true, found: rowCount !== 0 };
+    await save(parsed.data);
+    return null;
   } catch (error) {
-    // Уникальность почты без учета регистра проверяет индекс в БД — это
-    // надежнее проверки перед вставкой, которую обгонит параллельный запрос
-    if (isUniqueViolation(error, "customers_email_lower_key")) {
-      return fail({ message: null, errors: { email: [EMAIL_TAKEN] } });
+    if (error instanceof ServiceError) {
+      // Ошибку, относящуюся к полю (дубль почты), показываем у этого поля
+      return error.field
+        ? { message: null, errors: { [error.field]: [error.message] }, values }
+        : { message: error.message, errors: {}, values };
     }
     console.error(`${permission}Customer`, error);
-    return fail({ message: DB_ERROR, errors: {} });
+    return { message: DB_ERROR, errors: {}, values };
   }
 }
 
 export async function createCustomer(_prev: CustomerFormState, formData: FormData): Promise<CustomerFormState> {
-  const result = await saveCustomer("create", formData, ({ name, email, imageUrl }) =>
-    pool.query("INSERT INTO customers (name, email, image_url) VALUES ($1, $2, $3)", [name, email, imageUrl]),
-  );
-  if (!result.ok) return result.state;
+  const failed = await saveCustomer("create", formData, insertCustomer);
+  if (failed) return failed;
 
   revalidatePath("/dashboard", "layout");
   redirect("/dashboard/customers");
@@ -65,13 +59,8 @@ export async function updateCustomer(
     return { message: "Клиент не найден.", errors: {}, values: formValues(formData, FIELDS) };
   }
 
-  const result = await saveCustomer("update", formData, ({ name, email, imageUrl }) =>
-    pool.query("UPDATE customers SET name = $2, email = $3, image_url = $4 WHERE id = $1", [id, name, email, imageUrl]),
-  );
-  if (!result.ok) return result.state;
-  if (!result.found) {
-    return { message: "Клиент не найден: возможно, его уже удалили.", errors: {}, values: formValues(formData, FIELDS) };
-  }
+  const failed = await saveCustomer("update", formData, (data) => updateCustomerById(id, data));
+  if (failed) return failed;
 
   revalidatePath("/dashboard", "layout");
   redirect("/dashboard/customers");
@@ -82,14 +71,9 @@ export async function deleteCustomer(id: string): Promise<ActionResult> {
   if (!z.uuid().safeParse(id).success) return { ok: false, message: "Клиент не найден." };
 
   try {
-    const { rowCount } = await pool.query("DELETE FROM customers WHERE id = $1", [id]);
-    if (rowCount === 0) return { ok: false, message: "Клиент уже удален." };
+    await deleteCustomerById(id);
   } catch (error) {
-    // Внешний ключ invoices.customer_id ON DELETE RESTRICT: клиента со счетами
-    // удалить нельзя, иначе пропала бы история выручки
-    if (isForeignKeyViolation(error)) {
-      return { ok: false, message: "У клиента есть счета. Сначала удалите их или перенесите на другого клиента." };
-    }
+    if (error instanceof ServiceError) return { ok: false, message: error.message };
     console.error("deleteCustomer", error);
     return { ok: false, message: "Не удалось удалить клиента. Попробуйте еще раз." };
   }

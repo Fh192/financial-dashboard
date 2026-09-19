@@ -38,7 +38,29 @@ export async function fetchCustomersForExport(query: string): Promise<CustomerRo
   return selectCustomers(query, MAX_EXPORT_ROWS, 0);
 }
 
-async function selectCustomers(query: string, limit: number, offset: number): Promise<CustomerRow[]> {
+/** Страница клиентов и общее число найденных — для REST API. */
+export async function fetchCustomersPage(
+  query: string,
+  page: number,
+  pageSize: number,
+): Promise<{ items: CustomerRow[]; total: number }> {
+  await requirePermission({ customer: ["read"] });
+  const [items, total] = await Promise.all([
+    selectCustomers(query, pageSize, (page - 1) * pageSize),
+    countCustomers(query),
+  ]);
+  return { items, total };
+}
+
+/** Клиент с суммами по счетам — для REST API. null, если не найден. */
+export async function fetchCustomerRowById(id: string): Promise<CustomerRow | null> {
+  await requirePermission({ customer: ["read"] });
+  if (!z.uuid().safeParse(id).success) return null;
+  const [row] = await selectCustomers("", 1, 0, id);
+  return row ?? null;
+}
+
+async function selectCustomers(query: string, limit: number, offset: number, id?: string): Promise<CustomerRow[]> {
   // Суммы по счетам считаем в подзапросе, чтобы LIMIT применялся к клиентам,
   // а не к строкам соединения с invoices
   const { rows } = await pool.query<Omit<CustomerRow, "paid" | "pending"> & { paid: string; pending: string }>(
@@ -60,23 +82,26 @@ async function selectCustomers(query: string, limit: number, offset: number): Pr
       FROM invoices i
       WHERE i.customer_id = c.id
     ) t ON true
-    WHERE ${SEARCH_CONDITION}
+    WHERE (${SEARCH_CONDITION}) AND ($4::uuid IS NULL OR c.id = $4)
     ORDER BY c.name
     LIMIT $2 OFFSET $3
     `,
-    [containsPattern(query), limit, offset],
+    [containsPattern(query), limit, offset, id ?? null],
   );
   return rows.map((r) => ({ ...r, paid: Number(r.paid), pending: Number(r.pending) }));
 }
 
 export async function fetchCustomersPages(query: string): Promise<number> {
   await requirePermission({ customer: ["read"] });
+  return Math.ceil((await countCustomers(query)) / CUSTOMERS_PER_PAGE);
+}
 
+async function countCustomers(query: string): Promise<number> {
   const { rows } = await pool.query<{ count: number }>(
     `SELECT COUNT(*)::int AS count FROM customers c WHERE ${SEARCH_CONDITION}`,
     [containsPattern(query)],
   );
-  return Math.ceil(rows[0].count / CUSTOMERS_PER_PAGE);
+  return rows[0].count;
 }
 
 export async function fetchCustomerById(id: string): Promise<CustomerForm | null> {
