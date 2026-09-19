@@ -1,0 +1,23 @@
+# Конфигурация Qlty (CLI и Qlty Cloud): оценка поддерживаемости кода и покрытие.
+# Справка: https://qlty.sh/d/qlty-toml
+config_version = "0"
+
+exclude_patterns = [
+  # Сгенерированный и сторонний код — не наш, оценивать его нет смысла
+  "components/ui/**",
+  "next-env.d.ts",
+  "**/node_modules/**",
+  "**/.next/**",
+  "coverage/**",
+  "playwright-report/**",
+  "test-results/**",
+]
+
+test_patterns = [
+  "**/*.test.*",
+  "e2e/**",
+]
+
+[[source]]
+name = "default"
+default = true
