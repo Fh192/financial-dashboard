@@ -4,6 +4,8 @@ import { isForeignKeyViolation, isUniqueViolation } from "./db-errors";
 describe("ошибки PostgreSQL", () => {
   it("узнает нарушение внешнего ключа", () => {
     expect(isForeignKeyViolation({ code: "23503" })).toBe(true);
+    // PostgreSQL 18: удаление записи, на которую ссылаются с ON DELETE RESTRICT
+    expect(isForeignKeyViolation({ code: "23001" })).toBe(true);
     expect(isForeignKeyViolation({ code: "23505" })).toBe(false);
     expect(isForeignKeyViolation(new Error("boom"))).toBe(false);
     expect(isForeignKeyViolation(null)).toBe(false);
