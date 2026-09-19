@@ -45,7 +45,8 @@ export function positionalArgs(): string[] {
   return process.argv.slice(2).filter((a) => !a.startsWith("--"));
 }
 
-const PG_IMAGE = process.env.PG_IMAGE ?? "postgres:17-alpine";
+// pg_dump должен быть не старше сервера: 18 работает и с локальной 17, и с Neon 18
+const PG_IMAGE = process.env.PG_IMAGE ?? "postgres:18-alpine";
 
 function hasLocalTool(tool: string): boolean {
   return spawnSync(tool, ["--version"], { stdio: "ignore" }).status === 0;

@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
 import { admin as adminPlugin, bearer } from "better-auth/plugins";
 import { pool } from "@/lib/db";
+import { resolveBaseUrl, vercelTrustedOrigins } from "@/lib/deployment";
 import { ac, DEFAULT_ROLE, roles } from "@/lib/permissions";
 
 // Better Auth по умолчанию ждет таблицы user/session/account/verification с полями
@@ -12,6 +13,8 @@ const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
 export const auth = betterAuth({
   appName: "Financial Dashboard",
   database: pool,
+  baseURL: resolveBaseUrl(process.env),
+  trustedOrigins: vercelTrustedOrigins(process.env),
 
   emailAndPassword: {
     enabled: true,
@@ -72,6 +75,10 @@ export const auth = betterAuth({
       // id генерирует PostgreSQL: DEFAULT gen_random_uuid()
       generateId: "uuid",
     },
+    // IP клиента для лимита попыток входа. На Vercel заголовок x-real-ip
+    // выставляет сама платформа, подделать его нельзя. Вне Vercel ему не
+    // доверяем: без прокси его может прислать любой клиент.
+    ...(process.env.VERCEL && { ipAddress: { ipAddressHeaders: ["x-real-ip"] } }),
   },
 
   plugins: [

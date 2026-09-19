@@ -57,7 +57,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:17-alpine
+        image: postgres:18-alpine # как в продакшене (Neon)
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -117,3 +117,45 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  # Миграции продакшен-БД — только после зеленых проверок и только из master.
+  # Строка подключения владельца БД хранится в секрете GitHub, а не в Vercel:
+  # приложение на Vercel знает только пользователя с ролью dashboard_app.
+  migrate:
+    name: Миграции продакшен-БД
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: [checks, e2e]
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+    steps:
+      - name: Проверка секрета
+        id: secret
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::notice::Секрет PRODUCTION_DATABASE_URL не задан — миграции пропущены"
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v5
+        if: steps.secret.outputs.configured == 'true'
+
+      - uses: pnpm/action-setup@v4
+        if: steps.secret.outputs.configured == 'true'
+
+      - uses: actions/setup-node@v5
+        if: steps.secret.outputs.configured == 'true'
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+        if: steps.secret.outputs.configured == 'true'
+
+      - name: dbmate up
+        if: steps.secret.outputs.configured == 'true'
+        run: |
+          pnpm db:migrate
+          pnpm db:status
