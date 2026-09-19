@@ -55,6 +55,10 @@ export const auth = betterAuth({
 
   // Счетчики попыток храним в БД: на Vercel у каждой функции своя память
   rateLimit: {
+    // По умолчанию Better Auth включает лимит в продакшене и выключает в dev.
+    // AUTH_RATE_LIMIT=off выставляется только в CI для e2e-тестов: все запросы
+    // Playwright идут с одного IP и упирались бы в лимит попыток входа.
+    enabled: process.env.AUTH_RATE_LIMIT === "off" ? false : undefined,
     storage: "database",
     modelName: "rate_limits",
     fields: { lastRequest: "last_request" },
