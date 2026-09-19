@@ -1,0 +1,51 @@
+name: Продакшен-БД
+
+# Ручной запуск (Actions → «Продакшен-БД» → Run workflow): вернуть демо-данные
+# в исходное состояние после проверки или дозаполнить их. Строка владельца
+# БД — в секрете PRODUCTION_DATABASE_URL; GitHub скрывает ее в логах.
+on:
+  workflow_dispatch:
+    inputs:
+      data:
+        description: "seed — добавить недостающие тестовые данные, reset — очистить и заполнить заново"
+        type: choice
+        options: [seed, reset]
+        default: seed
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-db
+
+jobs:
+  data:
+    name: Тестовые данные
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+    steps:
+      - name: Проверка секрета
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Не задан секрет PRODUCTION_DATABASE_URL"; exit 1
+          fi
+
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Миграции
+        run: pnpm db:migrate
+
+      - name: Тестовые данные
+        env:
+          MODE: ${{ inputs.data }}
+        run: pnpm "db:$MODE"
