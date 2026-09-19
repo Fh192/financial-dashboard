@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatCurrency, formatCurrencyCompact, formatDate, formatDateTime, formatMonthLong, formatMonthShort, initials } from "./format";
+import { formatCurrency, formatCurrencyCompact, formatDate, formatDateTime, formatMoney, formatMonthLong, formatRate, formatMonthShort, initials } from "./format";
 
 // Intl в ru-RU разделяет разряды и валюту неразрывными пробелами
 const normalize = (s: string) => s.replace(/[\u00a0\u202f]/g, " ");
@@ -13,6 +13,19 @@ describe("formatCurrency", () => {
 
   it("сокращает большие суммы для осей графика", () => {
     expect(normalize(formatCurrencyCompact(1250000))).toBe("12,5 тыс. $");
+  });
+});
+
+describe("formatMoney и formatRate", () => {
+  it("форматирует рубли, евро и юани", () => {
+    expect(normalize(formatMoney(126763.95, "RUB"))).toBe("126 763,95 ₽");
+    expect(normalize(formatMoney(1300.17, "EUR"))).toBe("1 300,17 €");
+    expect(normalize(formatMoney(10077.6, "CNY"))).toMatch(/^10 077,60 (CN¥|¥)$/);
+  });
+
+  it("показывает курс с четырьмя знаками, как ЦБ", () => {
+    expect(normalize(formatRate(84.5093))).toBe("84,5093 ₽");
+    expect(normalize(formatRate(0.632339))).toBe("0,6323 ₽");
   });
 });
 

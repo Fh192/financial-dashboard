@@ -26,6 +26,23 @@ function parseISODate(value: string): Date {
   return new Date(Date.UTC(year, month - 1, day));
 }
 
+const moneyFormats = new Map<string, Intl.NumberFormat>();
+
+/** Сумма в единицах валюты: formatMoney(126763.95, "RUB") → «126 763,95 ₽» */
+export function formatMoney(amount: number, currencyCode: "RUB" | "EUR" | "CNY" | "USD"): string {
+  let format = moneyFormats.get(currencyCode);
+  if (!format) {
+    format = new Intl.NumberFormat("ru-RU", { style: "currency", currency: currencyCode });
+    moneyFormats.set(currencyCode, format);
+  }
+  return format.format(amount);
+}
+
+/** Курс ЦБ: 84.5093 → «84,5093 ₽» (4 знака, как публикует ЦБ) */
+export function formatRate(rubPerUnit: number): string {
+  return `${rubPerUnit.toLocaleString("ru-RU", { minimumFractionDigits: 4, maximumFractionDigits: 4 })} ₽`;
+}
+
 /** 150000 → «1 500,00 $» */
 export function formatCurrency(cents: number): string {
   return currency.format(cents / 100);

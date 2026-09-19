@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { ExchangeRatesCard, ExchangeRatesCardSkeleton } from "@/components/dashboard/exchange-rates-card";
 import { LatestInvoices } from "@/components/dashboard/latest-invoices";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import {
@@ -30,7 +31,11 @@ export default async function OverviewPage() {
             <RevenueChart />
           </Suspense>
         </div>
-        <div className="lg:col-span-3">
+        <div className="flex flex-col gap-4 lg:col-span-3">
+          {/* Курсы грузятся из внешнего API — отдельный Suspense, чтобы не задерживать остальное */}
+          <Suspense fallback={<ExchangeRatesCardSkeleton />}>
+            <ExchangeRatesCard />
+          </Suspense>
           <Suspense fallback={<LatestInvoicesSkeleton />}>
             <LatestInvoices />
           </Suspense>

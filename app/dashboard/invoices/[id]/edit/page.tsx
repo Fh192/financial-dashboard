@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { InvoiceAmountInCurrencies } from "@/components/invoices/amount-in-currencies";
 import { InvoiceForm } from "@/components/invoices/invoice-form";
 import { InvoiceStatusHistory } from "@/components/invoices/status-history";
 import { PageBreadcrumbs } from "@/components/page-breadcrumbs";
@@ -27,6 +28,9 @@ export default async function EditInvoicePage({ params }: PageProps<"/dashboard/
         action={updateInvoice.bind(null, invoice.id)}
         submitLabel="Сохранить"
       />
+      <Suspense fallback={<Skeleton className="h-36 max-w-xl" />}>
+        <InvoiceAmountInCurrencies amount={invoice.amount} date={invoice.date} />
+      </Suspense>
       <Suspense fallback={<Skeleton className="h-40 max-w-xl" />}>
         <InvoiceStatusHistory invoiceId={invoice.id} />
       </Suspense>
