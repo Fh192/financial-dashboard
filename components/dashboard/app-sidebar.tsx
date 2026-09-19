@@ -20,8 +20,8 @@ import { NavUser } from "./nav-user";
 
 type NavItem = { title: string; href: string; icon: LucideIcon; permissions: Permissions };
 
-// Разделы появляются в меню по мере реализации. Пункт виден, только если
-// у роли есть права на раздел (сама страница проверяет права еще раз).
+// Пункт меню виден, только если у роли есть права на раздел
+// (сама страница проверяет права еще раз).
 const navItems: NavItem[] = [
   { title: "Обзор", href: "/dashboard", icon: LayoutDashboardIcon, permissions: { invoice: ["read"] } },
   { title: "Счета", href: "/dashboard/invoices", icon: FileTextIcon, permissions: { invoice: ["read"] } },

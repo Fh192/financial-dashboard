@@ -1,6 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-/** Скелетон списка (таблицы) на время загрузки. */
 export function ListSkeleton({ rows = 6 }: { rows?: number }) {
   return (
     <div className="flex flex-col divide-y rounded-xl border">

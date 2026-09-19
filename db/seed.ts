@@ -10,7 +10,7 @@ import { connect, hasFlag, requireEnv, transaction } from "./lib";
 
 type Role = "admin" | "manager" | "viewer";
 
-// Пароли тестовых учеток указываются в отчете (технический паспорт)
+// Учетные записи для проверки; они же перечислены в README
 const users: { id: string; name: string; email: string; password: string; role: Role }[] = [
   { id: "10000000-0000-4000-8000-000000000001", name: "Администратор", email: "admin@example.com", password: "Admin123!", role: "admin" },
   { id: "10000000-0000-4000-8000-000000000002", name: "Менеджер", email: "manager@example.com", password: "Manager123!", role: "manager" },

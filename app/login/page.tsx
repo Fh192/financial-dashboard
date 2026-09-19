@@ -12,7 +12,6 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const { from } = await searchParams;
   const redirectTo = safeRedirectPath(typeof from === "string" ? from : null);
 
-  // Уже вошедшего пользователя сразу отправляем дальше
   if (await getCurrentUser()) redirect(redirectTo);
 
   return (

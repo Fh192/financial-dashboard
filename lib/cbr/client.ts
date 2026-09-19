@@ -2,8 +2,7 @@ import "server-only";
 import { type CbrRates, parseCbrMirrorJson, parseCbrXml } from "./parse";
 
 // Внешняя интеграция: официальные курсы ЦБ РФ. Сначала — сайт ЦБ,
-// при ошибке — зеркало cbr-xml-daily.ru с теми же данными (сайт ЦБ бывает
-// недоступен или отвечает ошибкой на запросы из-за рубежа, например с Vercel).
+// при ошибке — зеркало cbr-xml-daily.ru с теми же данными.
 
 const TIMEOUT_MS = 5000;
 // Заголовки HTTP — только ASCII, кириллица здесь ломает fetch

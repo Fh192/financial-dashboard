@@ -42,8 +42,7 @@ jobs:
       - name: Vitest с покрытием
         run: pnpm test:coverage
 
-      # Покрытие для бейджа Qlty. Пока репозиторий не подключен к Qlty,
-      # загрузка не проходит, но сборку не валит (skip-errors по умолчанию)
+      # Покрытие для Qlty; сбой загрузки сборку не валит (skip-errors по умолчанию)
       - name: Загрузка покрытия в Qlty
         uses: qltysh/qlty-action/coverage@v2
         with:
@@ -123,7 +122,6 @@ jobs:
   # приложение на Vercel знает только пользователя с ролью dashboard_app.
   migrate:
     name: Миграции продакшен-БД
-    # Основная ветка репозитория (main), без привязки к ее названию
     if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     needs: [checks, e2e]
     runs-on: ubuntu-latest
