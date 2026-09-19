@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { MAX_EXPORT_ROWS } from "@/lib/csv";
 import { requirePermission } from "@/lib/dal";
 import { pool } from "@/lib/db";
 import { containsPattern } from "@/lib/search";
@@ -28,7 +29,16 @@ const SEARCH_CONDITION = "c.name ILIKE $1 OR c.email ILIKE $1";
 
 export async function fetchFilteredCustomers(query: string, page: number): Promise<CustomerRow[]> {
   await requirePermission({ customer: ["read"] });
+  return selectCustomers(query, CUSTOMERS_PER_PAGE, (page - 1) * CUSTOMERS_PER_PAGE);
+}
 
+/** Все клиенты по запросу с суммами по счетам — для выгрузки в CSV. */
+export async function fetchCustomersForExport(query: string): Promise<CustomerRow[]> {
+  await requirePermission({ customer: ["read"], report: ["export"] });
+  return selectCustomers(query, MAX_EXPORT_ROWS, 0);
+}
+
+async function selectCustomers(query: string, limit: number, offset: number): Promise<CustomerRow[]> {
   // Суммы по счетам считаем в подзапросе, чтобы LIMIT применялся к клиентам,
   // а не к строкам соединения с invoices
   const { rows } = await pool.query<Omit<CustomerRow, "paid" | "pending"> & { paid: string; pending: string }>(
@@ -54,7 +64,7 @@ export async function fetchFilteredCustomers(query: string, page: number): Promi
     ORDER BY c.name
     LIMIT $2 OFFSET $3
     `,
-    [containsPattern(query), CUSTOMERS_PER_PAGE, (page - 1) * CUSTOMERS_PER_PAGE],
+    [containsPattern(query), limit, offset],
   );
   return rows.map((r) => ({ ...r, paid: Number(r.paid), pending: Number(r.pending) }));
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { CreateCustomerButton } from "@/components/customers/buttons";
 import { CustomersTable } from "@/components/customers/customers-table";
+import { ExportButton } from "@/components/export-button";
 import { ListSkeleton } from "@/components/list-skeleton";
 import { PageBreadcrumbs } from "@/components/page-breadcrumbs";
 import { PaginationNav } from "@/components/pagination-nav";
@@ -24,6 +25,7 @@ export default async function CustomersPage({ searchParams }: PageProps<"/dashbo
       <PageBreadcrumbs items={[{ label: "Клиенты" }]} />
       <div className="flex items-center gap-2">
         <SearchInput placeholder="Название или почта" />
+        {can(user, { report: ["export"] }) && <ExportButton href="/dashboard/customers/export" />}
         {can(user, { customer: ["create"] }) && <CreateCustomerButton />}
       </div>
       <Suspense key={`${query}:${page}`} fallback={<ListSkeleton />}>

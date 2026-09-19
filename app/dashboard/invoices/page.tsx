@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { CreateInvoiceButton } from "@/components/invoices/buttons";
 import { InvoicesTable } from "@/components/invoices/invoices-table";
+import { ExportButton } from "@/components/export-button";
 import { ListSkeleton } from "@/components/list-skeleton";
 import { PageBreadcrumbs } from "@/components/page-breadcrumbs";
 import { PaginationNav } from "@/components/pagination-nav";
@@ -24,6 +25,7 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/dashboa
       <PageBreadcrumbs items={[{ label: "Счета" }]} />
       <div className="flex items-center gap-2">
         <SearchInput placeholder="Клиент, почта, сумма, дата (ДД.ММ.ГГГГ) или статус" />
+        {can(user, { report: ["export"] }) && <ExportButton href="/dashboard/invoices/export" />}
         {can(user, { invoice: ["create"] }) && <CreateInvoiceButton />}
       </div>
       {/* key: при новом поиске или странице снова показываем скелетон */}

@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { MAX_EXPORT_ROWS } from "@/lib/csv";
 import { requirePermission } from "@/lib/dal";
 import { pool } from "@/lib/db";
 import type { InvoiceStatus } from "@/lib/definitions";
@@ -47,7 +48,16 @@ const SEARCH_CONDITION = `
 
 export async function fetchFilteredInvoices(query: string, page: number): Promise<InvoiceRow[]> {
   await requirePermission({ invoice: ["read"] });
+  return selectInvoices(query, INVOICES_PER_PAGE, (page - 1) * INVOICES_PER_PAGE);
+}
 
+/** Все счета по запросу — для выгрузки в CSV (с тем же поиском, что и в списке). */
+export async function fetchInvoicesForExport(query: string): Promise<InvoiceRow[]> {
+  await requirePermission({ invoice: ["read"], report: ["export"] });
+  return selectInvoices(query, MAX_EXPORT_ROWS, 0);
+}
+
+async function selectInvoices(query: string, limit: number, offset: number): Promise<InvoiceRow[]> {
   const { rows } = await pool.query<InvoiceRow>(
     `
     SELECT
@@ -64,7 +74,7 @@ export async function fetchFilteredInvoices(query: string, page: number): Promis
     ORDER BY i.date DESC, i.created_at DESC
     LIMIT $2 OFFSET $3
     `,
-    [containsPattern(query), INVOICES_PER_PAGE, (page - 1) * INVOICES_PER_PAGE],
+    [containsPattern(query), limit, offset],
   );
   return rows;
 }
